@@ -1,20 +1,32 @@
 import urllib.request
+import json
+
 
 def get_departure_list(stop_name):
-	stop_name = stop_name.replace(" ", "%20")
-	stop_name = str(stop_name.encode("ascii", "ignore"))
-	url = "http://widgets.vvo-online.de/abfahrtsmonitor/Abfahrten.do?ort=Dresden&hst=" + stop_name + "&vz="
-	content = urllib.request.urlopen(url).read()
-	#content = "[[\"11\",\"Bhlau\",\"3\"],[\"11\",\"Zschertnitz\",\"6\"],[\"61\",\"Lbtau\",\"20\"],[\"61\",\"E Pohlandplatz\",\"23\"],[\"11\",\"Bhlau\",\"33\"],[\"11\",\"Zschertnitz\",\"36\"],[\"11\",\"Gorbitz\",\"48\"],[\"61\",\"Btf. Gruna\",\"53\"],[\"11\",\"Zschertnitz\",\"66\"],[\"11\",\"Bhlau\",\"73\"]]"
+    stop_name = stop_name.replace(" ", "%20")
+    stop_name = str(stop_name.encode("ascii", "ignore"))
+    url = "http://widgets.vvo-online.de/abfahrtsmonitor/Abfahrten.do?ort=Dresden&hst=" + stop_name + "&vz="
 
-	content = str(content, "utf-8")
 
-	content = content.replace("[", "")
-	content = content.replace(",", "")
-	content = content.replace("]", "")
-	content = content.split("\"")
-	while content.count("") > 0:
-		content.remove("")
+    file = urllib.request.urlopen(url).read().decode('utf-8')
 
-	return content
+    content = json.loads(file)
 
+    return content
+
+def compile_menu(station="Heinrich-Zille-Straße"):
+    return [
+        ' '.join([number, direction, ':'.join(split_time(time))]) for number, direction, time in get_departure_list(station)
+    ]
+
+
+def split_time(time):
+    hours = str(int(str(time)) // 60)
+    minutes = str(int(str(time)) % 60)
+    if len(minutes) < 2:
+        minutes = "0" + minutes
+    else:
+        minutes = str(minutes)
+    return hours, minutes
+
+a = compile_menu("Heinrich-Zille-Straße")
